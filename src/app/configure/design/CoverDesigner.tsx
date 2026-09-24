@@ -7,7 +7,7 @@ import { Rnd } from "react-rnd";
 import HandleComponent from "@/components/HandleComponent";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Description, Radio, RadioGroup } from "@headlessui/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   COLORS,
   FINISHING,
@@ -27,6 +27,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, ChevronsUpDown } from "lucide-react";
 import { BASE_PRICE } from "@/constants/products";
+import { useUploadThing } from "@/lib/uploadthing";
+import { toast } from "@/components/ui/toast";
 
 interface DesignConfigProps {
   configId: number;
@@ -35,6 +37,19 @@ interface DesignConfigProps {
     width: number;
     height: number;
   };
+}
+
+function base64ToBlob(base64: string, mimeType: string) {
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+
+  for (let i = 0; i < byteChars.length; i++) {
+    byteNumbers[i] = byteChars.charCodeAt(i);
+  }
+
+  const byteArray = new Uint8Array(byteNumbers);
+
+  return new Blob([byteArray], { type: mimeType });
 }
 
 const CoverDesigner = ({
@@ -54,11 +69,81 @@ const CoverDesigner = ({
     finish: FINISHING.options[0],
   });
 
+  const [renderedDimensions, setRenderedDimensions] = useState({
+    width: imageDimensions.width / 4,
+    height: imageDimensions.height / 4,
+  });
+
+  const [renderedPosition, setRenderedPosition] = useState({ x: 150, y: 205 });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const coverRef = useRef<HTMLDivElement>(null);
+
+  const { startUpload } = useUploadThing("imageUploader");
+
+  async function saveCoverDesign() {
+    try {
+      const {
+        left: coverLeft,
+        top: coverTop,
+        width,
+        height,
+      } = coverRef.current!.getBoundingClientRect();
+
+      const { left: containerLeft, top: containerTop } =
+        containerRef.current!.getBoundingClientRect();
+
+      const leftOffset = coverLeft - containerLeft;
+      const topOffset = coverTop - containerTop;
+
+      const actualX = renderedPosition.x - leftOffset;
+      const actualY = renderedPosition.y - topOffset;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      const uploadedImage = new Image();
+      uploadedImage.crossOrigin = "anonymous";
+      uploadedImage.src = imageUrl;
+
+      await new Promise((resolve) => (uploadedImage.onload = resolve));
+
+      ctx?.drawImage(
+        uploadedImage,
+        actualX,
+        actualY,
+        renderedDimensions.width,
+        renderedDimensions.height,
+      );
+
+      const base64 = canvas.toDataURL();
+      const base64Data = base64.split(",")[1];
+
+      const blob = base64ToBlob(base64Data, "image/png");
+
+      const file = new File([blob], "filename.png", { type: "image/png" });
+
+      await startUpload([file], { configId });
+    } catch (error) {
+      toast.add({
+        title: "Something went wrong!",
+        description: "There was an error saving design, please try again.",
+        type: "error",
+      });
+    }
+  }
+
   return (
-    <div className="relative mt-20 grid grid-cols-3 mb-20 pb-20">
-      <div className="relative h-150 overflow-hidden col-span-2 w-full max-w-4xl items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+    <div className="relative mt-20 grid grid-cols-1 lg:grid-cols-3 mb-20 pb-20">
+      <div
+        ref={containerRef}
+        className="relative h-150 overflow-hidden col-span-2 w-full max-w-4xl items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-12 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      >
         <div className="relative w-60 bg-opacity-50 pointer-events-none aspect-896/1831">
           <AspectRatio
+            ref={coverRef}
             ratio={896 / 1831}
             className="pointer-events-none relative z-50 aspect-896/1831 w-full"
           >
@@ -93,6 +178,18 @@ const CoverDesigner = ({
             topRight: <HandleComponent />,
             topLeft: <HandleComponent />,
           }}
+          onResizeStop={(_, __, ref, ___, { x, y }) => {
+            setRenderedDimensions({
+              width: parseInt(ref.style.width.slice(0, -2)),
+              height: parseInt(ref.style.height.slice(0, -2)),
+            });
+
+            setRenderedPosition({ x, y });
+          }}
+          onDragStop={(_, data) => {
+            const { x, y } = data;
+            setRenderedPosition({ x, y });
+          }}
           className="absolute z-20 border-[3px] border-primary"
         >
           <div className="relative w-full h-full">
@@ -106,7 +203,7 @@ const CoverDesigner = ({
         </Rnd>
       </div>
 
-      <div className="h-150 flex flex-col bg-white">
+      <div className="h-150 w-full col-span-full lg:col-span-1 flex flex-col bg-white">
         <ScrollArea className={"relative flex-1 overflow-auto"}>
           <div
             aread-hidden="true"
@@ -290,7 +387,11 @@ const CoverDesigner = ({
                   BASE_PRICE + options.finish.price + options.material.price,
                 )}
               </p>
-              <Button size="sm" className="w-full cursor-pointer">
+              <Button
+                size="sm"
+                className="w-full cursor-pointer"
+                onClick={() => saveCoverDesign()}
+              >
                 <ArrowRight className="h-4 w-4 ml-1.5" />
                 Continue
               </Button>
