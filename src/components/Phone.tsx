@@ -22,7 +22,11 @@ const Phone = ({
       {...props}
     >
       <Image
-        src={darkMode ? "/phone-template-dark-edges.png" : "/phone-template-white-edges.png"}
+        src={
+          darkMode
+            ? "/phone-template-dark-edges.png"
+            : "/phone-template-white-edges.png"
+        }
         className="pointer-events-none z-50 select-none w-full"
         alt="phone image"
         width={100}
@@ -32,7 +36,7 @@ const Phone = ({
         <Image
           src={imgSrc}
           alt="overlay phone image"
-          className="object-cover w-full"
+          className="object-cover min-w-full min-h-full"
           width={64}
           height={64}
         />

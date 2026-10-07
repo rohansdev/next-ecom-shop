@@ -29,6 +29,12 @@ import { ArrowRight, Check, ChevronsUpDown } from "lucide-react";
 import { BASE_PRICE } from "@/constants/products";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "@/components/ui/toast";
+import { useMutation } from "@tanstack/react-query";
+import {
+  SaveDesignConfigsArgs,
+  saveDesignConfigs as _saveDesignConfigs,
+} from "./actions";
+import { useRouter } from "next/navigation";
 
 interface DesignConfigProps {
   configId: number;
@@ -57,6 +63,25 @@ const CoverDesigner = ({
   imageUrl,
   imageDimensions,
 }: DesignConfigProps) => {
+  const router = useRouter();
+
+  const { mutate: saveDesignConfigs } = useMutation({
+    mutationKey: ["save-design-configs"],
+    mutationFn: async (args: SaveDesignConfigsArgs) => {
+      await Promise.all([saveCoverDesign(), _saveDesignConfigs(args)]);
+    },
+    onSuccess: () => {
+      router.push(`/configure/preview?id=${configId}`);
+    },
+    onError: () => {
+      toast.add({
+        title: "Something went wrong!",
+        description: "There as an error from server. Please try again.",
+        type: "error",
+      });
+    },
+  });
+
   const [options, setOptions] = useState<{
     color: (typeof COLORS)[number];
     model: (typeof MODELS.options)[number];
@@ -134,6 +159,16 @@ const CoverDesigner = ({
       });
     }
   }
+
+  const handleSaveDesignConfigs = () => {
+    saveDesignConfigs({
+      color: options.color.value,
+      finishing: options.finish.value,
+      material: options.material.value,
+      model: options.model.value,
+      configId,
+    });
+  };
 
   return (
     <div className="relative mt-20 grid grid-cols-1 lg:grid-cols-3 mb-20 pb-20">
@@ -390,7 +425,7 @@ const CoverDesigner = ({
               <Button
                 size="sm"
                 className="w-full cursor-pointer"
-                onClick={() => saveCoverDesign()}
+                onClick={() => handleSaveDesignConfigs()}
               >
                 <ArrowRight className="h-4 w-4 ml-1.5" />
                 Continue

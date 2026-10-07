@@ -18,10 +18,26 @@ const UploadPage = () => {
   const [isPending, startTransition] = useTransition();
 
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
-    onClientUploadComplete: ([data]) => {
-      const configId = data.serverData.configId;
+    onClientUploadComplete: (files) => {
+      const configId = files[0]?.serverData?.configId;
+      if (typeof configId !== "number") {
+        toast.add({
+          title: "Upload finished without a configuration.",
+          description: "Please try uploading your image again.",
+          type: "error",
+        });
+        return;
+      }
+
       startTransition(() => {
         router.push(`/configure/design?id=${configId}`);
+      });
+    },
+    onUploadError(error) {
+      toast.add({
+        title: "Image upload failed.",
+        description: error.message,
+        type: "error",
       });
     },
     onUploadProgress(p) {
@@ -30,7 +46,7 @@ const UploadPage = () => {
   });
 
   const handleOnDropAccepted = (acceptedFiles: File[]) => {
-    startUpload(acceptedFiles, { configId: undefined });
+    startUpload(acceptedFiles, {});
 
     setIsDragOver(false);
   };
@@ -60,7 +76,7 @@ const UploadPage = () => {
           onDropAccepted={handleOnDropAccepted}
           accept={{
             "image/png": [".png"],
-            "image/jpeg": ["jpeg"],
+            "image/jpeg": [".jpeg"],
             "image/jpg": [".jpg"],
           }}
           onDragEnter={() => setIsDragOver(true)}

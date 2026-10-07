@@ -3,20 +3,20 @@ import { notFound } from "next/navigation";
 import CoverDesigner from "./CoverDesigner";
 
 interface PageProps {
-  searchParams: {
-    [key: string]: number | number[] | undefined;
-  };
+  searchParams: Promise<{
+    [key: string]: string | string[] | undefined;
+  }>;
 }
 
 const page = async ({ searchParams }: PageProps) => {
   const { id } = await searchParams;
 
-  let configId = null;
-  if (typeof id === "string") {
-    configId = Number(id);
+  if (typeof id !== "string") {
+    return notFound();
   }
 
-  if (!configId || typeof configId !== "number") {
+  const configId = Number(id);
+  if (!Number.isSafeInteger(configId) || configId <= 0) {
     return notFound();
   }
 

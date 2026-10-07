@@ -14,7 +14,7 @@ export const MODELS = {
   name: "models",
   options: [
     { label: "iPhone X", value: "iphonex" },
-    { label: "iPhone 11", value: "iphonex11" },
+    { label: "iPhone 11", value: "iphone11" },
     { label: "iPhone 12", value: "iphone12" },
     { label: "iPhone 13", value: "iphone13" },
     { label: "iPhone 14", value: "iphone14" },
@@ -48,7 +48,7 @@ export const FINISHING = {
   options: [
     {
       label: "Smooth",
-      value: "sooth",
+      value: "smooth",
       description: "Smooth & luxurious finishing.",
       price: PRODUCT_PRICES.finish.smooth.price,
     },

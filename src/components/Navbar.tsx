@@ -1,13 +1,18 @@
+"use client";
+
 import Link from "next/link";
-import { RegisterLink, LoginLink } from "@kinde-oss/kinde-auth-nextjs";
+import { useSession, signOut } from "@/lib/auth-client";
+
 import { buttonVariants } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import MaxWidthWrapper from "./MaxWidthWrapper";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
-const Navbar = async () => {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
+const Navbar = () => {
+  let user;
+  const { data: session } = useSession();
+  if (session?.user) {
+    user = session.user;
+  }
   const isAdmin = user?.email === process.env.ADMIN_EMAIL;
 
   return (
@@ -25,14 +30,16 @@ const Navbar = async () => {
             {user ? (
               <>
                 <Link
-                  href={"/api/auth/logout"}
+                  onClick={() => signOut()}
+                  href={"#"}
                   className={buttonVariants({ size: "sm", variant: "ghost" })}
                 >
                   Sign-out
                 </Link>
                 {isAdmin ? (
                   <Link
-                    href={"/api/auth/logout"}
+                    onClick={() => signOut()}
+                    href={"#"}
                     className={buttonVariants({ size: "sm", variant: "ghost" })}
                   >
                     Dashboard
@@ -45,21 +52,23 @@ const Navbar = async () => {
                     className: "hidden sm:flex items-center gap-1",
                   })}
                 >
-                  Design Cover <ArrowRight className="h-5 w-5" />
+                  Design Cover <ArrowRight className="h-5 w-5 ml-1.5" />
                 </Link>
               </>
             ) : (
               <>
-                <RegisterLink
+                <Link
+                  href={"/sign-up"}
                   className={buttonVariants({ size: "sm", variant: "ghost" })}
                 >
                   Sign-Up
-                </RegisterLink>
-                <LoginLink
+                </Link>
+                <Link
+                  href={"/sign-in"}
                   className={buttonVariants({ size: "sm", variant: "ghost" })}
                 >
                   Sign-In
-                </LoginLink>
+                </Link>
                 <div className="h-2 w-px bg-zinc-200 hidden sm:block" />
                 <Link
                   href={"/configure/upload"}
@@ -68,7 +77,7 @@ const Navbar = async () => {
                     className: "hidden sm:flex items-center gap-1",
                   })}
                 >
-                  Design Cover <ArrowRight className="h-5 w-5" />
+                  Design Cover <ArrowRight className="h-5 w-5 ml-1.5 inline" />
                 </Link>
               </>
             )}

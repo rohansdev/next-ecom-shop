@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/toast";
+import Providers from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -36,10 +37,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         inter.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-gray-50">
         <Navbar />
         <main className="flex flex-col min-h-[calc(100vh-3.5rem-1px)]">
-          <div className="flex flex-1 flex-col h-full">{children}</div>
+          <div className="flex flex-1 flex-col h-full">
+            <Providers>{children}</Providers>
+          </div>
           <Footer />
         </main>
         <Toaster />
