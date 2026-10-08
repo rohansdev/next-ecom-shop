@@ -38,7 +38,7 @@ export const createCheckoutSession = async ({
   let order;
 
   const existingOrder = await db.orm.public.Order.first({
-    userId: user.id,
+    userId: Number(user.id),
     configurationId: configuration.id,
   });
 
@@ -47,7 +47,7 @@ export const createCheckoutSession = async ({
   } else {
     order = await db.orm.public.Order.create({
       configurationId: configuration.id,
-      userId: user.id,
+      userId: Number(user.id),
       orderTotal: total,
     });
   }
@@ -57,14 +57,14 @@ export const createCheckoutSession = async ({
     images: [configuration.imageUrl],
     default_price_data: {
       currency: "USD",
-      unit_amount: total,
+      unit_amount: Math.round(total * 100),
     },
   });
 
   const stripe_session = await stripe.checkout.sessions.create({
     success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/order-confirmation?orderId=${order.id}`,
     cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/configure/preview?id=${configuration.id}`,
-    payment_method_types: ["card", "paypal"],
+    payment_method_types: ["card"],
     mode: "payment",
     shipping_address_collection: {
       allowed_countries: ["IN", "US", "DE", "CN", "NE"],
