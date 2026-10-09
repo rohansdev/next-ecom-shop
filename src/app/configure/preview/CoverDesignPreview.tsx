@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { useSession } from "@/lib/auth-client";
 import { User } from "better-auth";
+import LoginModal from "@/components/LoginModal";
 
 type Configuration = Models.public_Configuration;
 
@@ -37,14 +38,9 @@ const CoverDesignPreview = ({
 }: {
   configuration: Configuration;
 }) => {
-  let user: User;
-  const { data: session } = useSession();
-  if (session?.user) {
-    user = session.user;
-  }
   const router = useRouter();
-
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -54,7 +50,13 @@ const CoverDesignPreview = ({
     return () => window.clearTimeout(timer);
   });
 
-  const { color, model, finishing, material } = configuration;
+  let user: User;
+  const { data: session } = useSession();
+  if (session?.user) {
+    user = session.user;
+  }
+
+  const { id, color, model, finishing, material } = configuration;
   const tailwindCssColor = COLORS.find(
     (supportedColor) => supportedColor.value === color,
   )?.tw;
@@ -87,6 +89,17 @@ const CoverDesignPreview = ({
     },
   });
 
+  const handleCheckout = () => {
+    if (user) {
+      // Create Stripe Payment Session if user is logged in
+      createPaymentSession({ configId: id, user });
+    } else {
+      // Store configuration id in local storage and show login modal popup
+      localStorage.setItem("configurationId", String(id));
+      setIsLoginModalOpen(true);
+    }
+  };
+
   return (
     <>
       <div
@@ -95,6 +108,8 @@ const CoverDesignPreview = ({
       >
         <Confetti active={showConfetti} config={confettiConfigs} />
       </div>
+
+      <LoginModal isOpen={isLoginModalOpen} setIsOpen={setIsLoginModalOpen} />
 
       <div className="mt-20 grid grid-cols-1 text-sm sm:grid-cols-12 sm:grid-rows-1 sm:gap-x-6 md:gap-x-8 lg:gap-x-12">
         <div className="sm:col-span-4 md:col-span-3 md:row-span-2 md:row-end-2">
@@ -178,9 +193,7 @@ const CoverDesignPreview = ({
             <div className="mt-8 flex justify-end pb-12">
               <Button
                 className="cursor-pointer px-4 sm:px-6 lg:px-8"
-                onClick={() =>
-                  createPaymentSession({ configId: configuration.id, user })
-                }
+                onClick={handleCheckout}
               >
                 Order Now <ArrowRight className="h-4 w-4 ml-1.5 inline" />
               </Button>

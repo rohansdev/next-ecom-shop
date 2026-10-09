@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,9 @@ import Link from "next/link";
 
 const Page = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callback") ?? "";
+
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -36,10 +39,16 @@ const Page = () => {
       if (res.error) {
         setError(res.error.message || "Something went wrong.");
       } else {
-        router.push("/dashboard");
+        if (callbackUrl) {
+          router.push(`/${callbackUrl}`);
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Something went wrong.");
+      setError(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
     }
   }
 
