@@ -17,7 +17,10 @@ import { useSession } from "@/lib/auth-client";
 import { User } from "better-auth";
 import LoginModal from "@/components/LoginModal";
 
-type Configuration = Models.public_Configuration;
+type Configuration = Pick<
+  Models.public_Configuration,
+  "id" | "croppedImageUrl" | "color" | "model" | "finishing" | "material"
+>;
 
 const confettiConfigs = {
   angle: 90,
@@ -61,9 +64,9 @@ const CoverDesignPreview = ({
     (supportedColor) => supportedColor.value === color,
   )?.tw;
 
-  const { label: phoneModel } = MODELS.options.find(
+  const phoneModel = MODELS.options.find(
     ({ value }) => value === model,
-  );
+  )?.label ?? "iPhone";
 
   let orderTotal = BASE_PRICE;
   if (material === "polycarbonate") {

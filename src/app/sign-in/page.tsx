@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
@@ -15,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 
-const SignInPage = () => {
+const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callback") ?? "";
@@ -113,5 +114,13 @@ const SignInPage = () => {
     </div>
   );
 };
+
+const SignInPage = () => (
+  <Suspense
+    fallback={<div className="flex min-h-dvh items-center justify-center" />}
+  >
+    <SignInForm />
+  </Suspense>
+);
 
 export default SignInPage;

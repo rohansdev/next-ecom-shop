@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
@@ -16,7 +17,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 
-const Page = () => {
+const SignUpForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callback") ?? "";
@@ -160,5 +161,13 @@ const Page = () => {
     </div>
   );
 };
+
+const Page = () => (
+  <Suspense
+    fallback={<div className="flex min-h-dvh items-center justify-center" />}
+  >
+    <SignUpForm />
+  </Suspense>
+);
 
 export default Page;
