@@ -1,9 +1,11 @@
+import { Suspense } from "react";
+import ConfirmationPage from "./ConfirmationPage";
+
 const Page = () => {
   return (
-    <div>
-      <h2>Thank you!</h2>
-      <p>Your order is confirmed.</p>
-    </div>
+    <Suspense>
+      <ConfirmationPage />
+    </Suspense>
   );
 };
 

@@ -53,20 +53,22 @@ const CoverDesignPreview = ({
     return () => window.clearTimeout(timer);
   });
 
-  let user: User;
   const { data: session } = useSession();
-  if (session?.user) {
-    user = session.user;
+  if (!session?.user) {
+    throw new Error("You are not logged in.");
+  } else if (!session?.user.id || !session?.user.email) {
+    throw new Error("Only logged in users are allowed to visit this page.");
   }
+
+  const user: User = session.user;
 
   const { id, color, model, finishing, material } = configuration;
   const tailwindCssColor = COLORS.find(
     (supportedColor) => supportedColor.value === color,
   )?.tw;
 
-  const phoneModel = MODELS.options.find(
-    ({ value }) => value === model,
-  )?.label ?? "iPhone";
+  const phoneModel =
+    MODELS.options.find(({ value }) => value === model)?.label ?? "iPhone";
 
   let orderTotal = BASE_PRICE;
   if (material === "polycarbonate") {
