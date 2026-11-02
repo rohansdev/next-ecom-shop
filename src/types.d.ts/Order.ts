@@ -5,5 +5,4 @@ export type Order = {
   orderTotal: number;
   status: "pending" | "shipped" | "await_shipment" | "delivered";
   isPaid: boolean;
-  user: object;
 };

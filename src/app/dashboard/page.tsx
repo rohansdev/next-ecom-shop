@@ -25,21 +25,21 @@ const getOrdersData = async (days: number) => {
     Date.now() - days * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  const paidOrdersLastWeek = db.orm.public.Order.where((order) =>
+  const paidOrders = db.orm.public.Order.where((order) =>
     order.isPaid.eq(true),
   ).where((order) => order.createdAt.gte(daysAgo));
 
-  const orders = await paidOrdersLastWeek
+  const orders = await paidOrders
     .orderBy((order) => order.createdAt.desc())
     .include("user")
     .include("shippingAddress")
     .all();
 
-  const lastWeekIncome = await paidOrdersLastWeek.aggregate((aggregate) => ({
+  const totalIncome = await paidOrders.aggregate((aggregate) => ({
     totalAmount: aggregate.sum("orderTotal"),
   }));
 
-  return { orders, lastWeekIncome };
+  return { orders, totalIncome };
 };
 
 const DashboardPage = async () => {
@@ -67,7 +67,7 @@ const DashboardPage = async () => {
               <CardHeader className="pb-2">
                 <CardDescription>Last Week</CardDescription>
                 <CardTitle className="text-4xl">
-                  {formatPrice(weekly.lastWeekIncome.totalAmount ?? 0)}
+                  {formatPrice(weekly.totalIncome.totalAmount ?? 0)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -79,7 +79,7 @@ const DashboardPage = async () => {
                 <Progress
                   className="w-full max-w-sm"
                   value={
-                    ((weekly.lastWeekIncome.totalAmount ?? 0) * 100) /
+                    ((weekly.totalIncome.totalAmount ?? 0) * 100) /
                     WEEKLY_GOAL
                   }
                 >
@@ -92,7 +92,7 @@ const DashboardPage = async () => {
               <CardHeader className="pb-2">
                 <CardDescription>Last Month</CardDescription>
                 <CardTitle className="text-4xl">
-                  {formatPrice(monthly.lastWeekIncome.totalAmount ?? 0)}
+                  {formatPrice(monthly.totalIncome.totalAmount ?? 0)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -104,7 +104,7 @@ const DashboardPage = async () => {
                 <Progress
                   className="w-full max-w-sm"
                   value={
-                    ((monthly.lastWeekIncome.totalAmount ?? 0) * 100) /
+                    ((monthly.totalIncome.totalAmount ?? 0) * 100) /
                     MONTHLY_GOAL
                   }
                 >
@@ -117,7 +117,6 @@ const DashboardPage = async () => {
 
           <h1 className="text-4xl font-bold tracking-tight">Orders</h1>
           <DataTable columns={columns} data={monthly.orders} />
-          
         </div>
       </div>
     </div>

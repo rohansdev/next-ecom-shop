@@ -54,10 +54,8 @@ export const columns = columnHelper.columns([
       return formatted;
     },
   }),
-  columnHelper.accessor("actions", {
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Actions" />
-    ),
+  columnHelper.display({
+    id: "actions",
     enableSorting: false,
     cell: ({ row }) => {
       const order = row.original;
