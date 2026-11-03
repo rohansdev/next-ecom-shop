@@ -29,8 +29,6 @@ const ConfirmationPage = () => {
     retryDelay: 500,
   });
 
-  console.log("data: ", data);
-
   if (isPending) {
     return (
       <div className="w-full mt-24 flex justify-center">

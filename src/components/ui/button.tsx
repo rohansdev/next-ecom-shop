@@ -52,7 +52,7 @@ function Button({
   }) {
   return (
     <ButtonPrimitive
-    disabled={isLoading}
+      disabled={isLoading}
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}

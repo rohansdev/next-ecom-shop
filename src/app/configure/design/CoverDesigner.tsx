@@ -65,7 +65,7 @@ const CoverDesigner = ({
 }: DesignConfigProps) => {
   const router = useRouter();
 
-  const { mutate: saveDesignConfigs } = useMutation({
+  const { mutate: saveDesignConfigs, isPending } = useMutation({
     mutationKey: ["save-design-configs"],
     mutationFn: async (args: SaveDesignConfigsArgs) => {
       await Promise.all([saveCoverDesign(), _saveDesignConfigs(args)]);
@@ -423,6 +423,9 @@ const CoverDesigner = ({
                 )}
               </p>
               <Button
+                isLoading={isPending}
+                disabled={isPending}
+                loadingText="Saving"
                 size="sm"
                 className="w-full cursor-pointer"
                 onClick={() => handleSaveDesignConfigs()}

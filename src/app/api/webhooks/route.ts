@@ -2,13 +2,23 @@ import { stripe } from "@/lib/stripe";
 import { db } from "@/prisma/db";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import OrderReceivedEmail from "@/components/emails/OrderReceivedEmail";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function getAddressData(
   name: string | null | undefined,
   address: Stripe.Address | null | undefined,
   phoneNumber?: string | null,
 ) {
-  if (!name || !address?.line1 || !address.city || !address.country || !address.postal_code) {
+  if (
+    !name ||
+    !address?.line1 ||
+    !address.city ||
+    !address.country ||
+    !address.postal_code
+  ) {
     throw new Error("Checkout session is missing required address details.");
   }
 
@@ -78,7 +88,10 @@ export async function POST(req: Request) {
       );
 
       await db.transaction(async (tx) => {
-        const order = await tx.orm.public.Order.where({ id: orderId, userId }).first();
+        const order = await tx.orm.public.Order.where({
+          id: orderId,
+          userId,
+        }).first();
 
         if (!order) {
           throw new Error("Order not found for checkout session.");
@@ -92,17 +105,40 @@ export async function POST(req: Request) {
           await tx.orm.public.BillingAddress.create(billingAddress);
         const createdShippingAddress =
           await tx.orm.public.ShippingAddress.create(shippingAddress);
-        const updatedOrder = await tx.orm.public.Order
-          .where({ id: orderId, userId, isPaid: false })
-          .update({
-            isPaid: true,
-            billingAddressId: createdBillingAddress.id,
-            shippingAddressId: createdShippingAddress.id,
-          });
+        const updatedOrder = await tx.orm.public.Order.where({
+          id: orderId,
+          userId,
+          isPaid: false,
+        }).update({
+          isPaid: true,
+          billingAddressId: createdBillingAddress.id,
+          shippingAddressId: createdShippingAddress.id,
+        });
 
         if (!updatedOrder) {
-          throw new Error("Order was already updated by another webhook request.");
+          throw new Error(
+            "Order was already updated by another webhook request.",
+          );
         }
+      });
+
+      await resend.emails.send({
+        from: "DesignMyCover <sehgalrohan32@gmail.com>",
+        to: [customerDetails.email],
+        subject: "New Order",
+        react: OrderReceivedEmail({
+          shippingAddress: {
+            name: shippingAddress.name,
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state!,
+            country: shippingAddress.country,
+            zipcode: shippingAddress.zipcode,
+            phoneNumber: shippingAddress.phoneNumber || null,
+          },
+          orderId,
+          orderDate: new Date().toLocaleDateString(),
+        }),
       });
     }
 
