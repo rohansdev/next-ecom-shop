@@ -42,5 +42,6 @@ export const constructMetadata = ({
       creator: "@rohans32",
     },
     icons,
+    metadataBase: new URL("https://next-ecom-shop.vercel.app/"),
   };
 };
